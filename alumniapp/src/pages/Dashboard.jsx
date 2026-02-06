@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, FileText, BarChart2, Users, Calendar, Lightbulb, Heart, Plus, Trophy } from 'lucide-react';
+import { User, FileText, BarChart2, Users, Calendar, Lightbulb, Heart, Plus, Trophy, MessageCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const userRole = localStorage.getItem('userRole') || 'Alumni';
-  const userName = localStorage.getItem('userName') || 'User';
+  const [user, setUser] = useState({ name: 'User', role: 'Student' });
+
+  useEffect(() => {
+    // Get user info from local storage (set during login)
+    setUser({
+      name: localStorage.getItem('userName') || 'User',
+      role: localStorage.getItem('userRole') || 'Student'
+    });
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -21,13 +28,13 @@ export default function Dashboard() {
           <div>
             <h1 className="text-6xl font-bold tracking-tight leading-none">Alumni<br />Connect</h1>
             <p className="text-teal-400 text-lg tracking-widest uppercase font-bold mt-2 ml-1 opacity-90">
-              Welcome back, {userName}
+              Welcome back, {user.name}
             </p>
           </div>
           <button onClick={handleLogout} className="text-sm font-bold text-gray-400 hover:text-white transition-all border-b-2 border-transparent hover:border-white pb-1">LOG OUT</button>
         </div>
 
-        {/* GRID */}
+        {/* GRID LAYOUT */}
         <div className="flex-grow grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-6">
           
           {/* 1. MY PROFILE (Big Card) */}
@@ -47,7 +54,7 @@ export default function Dashboard() {
              <h3 className="text-4xl font-bold text-slate-900 text-center mb-4 tracking-tight">My Profile</h3>
           </div>
 
-          {/* 2. LEADERBOARD (Updated Link & Icon) */}
+          {/* 2. LEADERBOARD */}
           <DashboardCard 
             title="Leaderboard" 
             icon={<Trophy size={42} strokeWidth={1.2} />} 
@@ -61,10 +68,10 @@ export default function Dashboard() {
             onClick={() => navigate('/posts')} 
           />
 
-          {/* 4. ALUMNI DIRECTORY (Updated Link) */}
+          {/* 4. CHAT & DIRECTORY (Updated Title & Icon) */}
           <DashboardCard 
-            title="Directory" 
-            icon={<Users size={42} strokeWidth={1.2} />} 
+            title="Chat & Directory" 
+            icon={<MessageCircle size={42} strokeWidth={1.2} />} 
             onClick={() => navigate('/accounts')} 
           />
 
@@ -95,11 +102,15 @@ export default function Dashboard() {
   );
 }
 
+// Reusable Card Component
 function DashboardCard({ title, icon, isPurple, onClick }) {
   return (
     <div onClick={onClick} className={`relative bg-gradient-to-b from-gray-200 to-gray-400 rounded-[2.5rem] p-8 flex flex-col justify-between group cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ${isPurple ? 'hover:shadow-indigo-500/30' : 'hover:shadow-teal-500/20'}`}>
       <div className="absolute top-6 right-6 bg-black/80 rounded-full p-1.5 opacity-80 group-hover:scale-110 transition-transform"><Plus size={12} className="text-white" strokeWidth={3} /></div>
-      <div className="mt-2 w-16 h-16 rounded-2xl flex items-center justify-center relative"><div className="absolute top-[-4px] right-[-4px] w-5 h-5 bg-teal-300 rounded-full opacity-70 group-hover:animate-pulse"></div><div className="text-slate-800 relative z-10 group-hover:scale-110 transition-transform duration-300">{icon}</div></div>
+      <div className="mt-2 w-16 h-16 rounded-2xl flex items-center justify-center relative">
+        <div className="absolute top-[-4px] right-[-4px] w-5 h-5 bg-teal-300 rounded-full opacity-70 group-hover:animate-pulse"></div>
+        <div className="text-slate-800 relative z-10 group-hover:scale-110 transition-transform duration-300">{icon}</div>
+      </div>
       <h3 className="text-3xl font-bold text-slate-800 leading-tight w-4/5 tracking-tight">{title}</h3>
     </div>
   );

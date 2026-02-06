@@ -11,7 +11,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
 import Feed from './pages/Feed';         
-import Accounts from './pages/Accounts'; // <--- 1. ADD THIS IMPORT
+import Accounts from './pages/Accounts'; // This is your new "Chat & Directory" page
 import Profile from './pages/Profile';   
 import Donations from './pages/Donations'; 
 import Mentorship from './pages/Mentorship'; 
@@ -40,22 +40,22 @@ export default function App() {
               <Route path="/" element={<Login />} />
               <Route path="/register" element={<Register />} />
               
-              {/* APP ROUTES */}
+              {/* DASHBOARD */}
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/posts" element={<Feed />} />
+              
+              {/* CORE FEATURES */}
+              <Route path="/posts" element={<Feed />} />       {/* Community Feed */}
+              <Route path="/accounts" element={<Accounts />} /> {/* Chat & Directory */}
               <Route path="/events" element={<Events />} />
-              
-              {/* --- 2. ADD THIS ROUTE --- */}
-              <Route path="/accounts" element={<Accounts />} />
-              {/* ------------------------- */}
-
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/donations" element={<Donations />} />
               <Route path="/mentorship" element={<Mentorship />} />
-              <Route path="/user/:username" element={<PublicProfile />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/donations" element={<Donations />} />
+
+              {/* PROFILE ROUTES */}
+              <Route path="/profile" element={<Profile />} />          {/* My Settings */}
+              <Route path="/user/:username" element={<PublicProfile />} /> {/* View Others */}
               
-              {/* FALLBACK */}
+              {/* FALLBACK (Redirect unknown links to login) */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

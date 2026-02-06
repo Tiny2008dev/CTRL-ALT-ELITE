@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, MapPin, Camera, Save, Shield, Bell, Check, X, Briefcase, Heart, MessageSquare, Clock, Loader } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, Save, Shield, Bell, Check, X, Briefcase, Heart, MessageSquare, Clock, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [requests, setRequests] = useState([]); 
   
@@ -24,7 +26,7 @@ export default function Profile() {
   useEffect(() => {
     fetchUserData();
     fetchRequests();
-    fetchMyPosts(); // <--- FETCH POSTS ON LOAD
+    fetchMyPosts(); 
   }, []);
 
   // 1. FETCH USER PROFILE
@@ -58,7 +60,7 @@ export default function Profile() {
     } catch (err) { console.error("Error fetching requests"); }
   };
 
-  // 3. FETCH MY POSTS (NEW)
+  // 3. FETCH MY POSTS
   const fetchMyPosts = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/posts/user/${currentUserName}`);
@@ -67,15 +69,45 @@ export default function Profile() {
     } catch (err) { console.error("Error fetching my posts"); }
   };
 
-  // 4. HANDLERS
-  const handleResponse = async (id, status) => {
+  // --- 4. HANDLERS (UPDATED WITH CONNECTION LOGIC) ---
+  
+  // Handle Accept (Connects Users + Updates Notification)
+  const handleAcceptRequest = async (req) => {
+    try {
+      // A. Call Connection API if it's a connection request
+      if (req.type === 'connection_request') {
+        await fetch('http://localhost:5000/api/connect/accept', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            sender: req.sender, 
+            recipient: currentUserName 
+          })
+        });
+      }
+
+      // B. Update Notification Status
+      await fetch(`http://localhost:5000/api/notifications/${req._id}/respond`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'accepted' })
+      });
+
+      // C. Update UI Locally
+      setRequests(prev => prev.map(r => r._id === req._id ? { ...r, status: 'accepted' } : r));
+      alert("Request Accepted! You can now chat.");
+    } catch (err) { alert("Action failed"); }
+  };
+
+  // Handle Decline
+  const handleRejectRequest = async (id) => {
     try {
       await fetch(`http://localhost:5000/api/notifications/${id}/respond`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status: 'rejected' })
       });
-      setRequests(prev => prev.map(req => req._id === id ? { ...req, status } : req));
+      setRequests(prev => prev.map(r => r._id === id ? { ...r, status: 'rejected' } : r));
     } catch (err) { alert("Action failed"); }
   };
 
@@ -117,12 +149,18 @@ export default function Profile() {
           <h2 className="text-2xl font-bold text-slate-900 mb-1">{userData.fullName || userData.username}</h2>
           <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 ${userRole === 'Alumni' ? 'bg-black text-white' : 'bg-teal-100 text-teal-800'}`}>{userRole}</span>
           {userData.currentJobRole && <span className="text-slate-500 text-sm font-bold flex items-center gap-1 mb-6"><Briefcase size={14} /> {userData.currentJobRole}</span>}
+          
           <div className="w-full space-y-4 text-left px-4 mb-8 mt-4">
             <div className="flex items-center gap-3 text-sm text-slate-600"><Mail size={18} className="text-teal-500" /><span className="truncate">{userData.email || 'No email'}</span></div>
             <div className="flex items-center gap-3 text-sm text-slate-600"><Phone size={18} className="text-teal-500" /><span>{userData.phone || 'No phone'}</span></div>
             <div className="flex items-center gap-3 text-sm text-slate-600"><MapPin size={18} className="text-teal-500" /><span>{userData.location || 'No location'}</span></div>
           </div>
-          <div className="w-full text-left px-4"><h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Bio</h3><p className="text-sm text-slate-600 italic leading-relaxed">"{userData.bio || 'No bio yet.'}"</p></div>
+          
+          <div className="w-full text-left px-4 mb-8"><h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Bio</h3><p className="text-sm text-slate-600 italic leading-relaxed">"{userData.bio || 'No bio yet.'}"</p></div>
+
+          <button onClick={() => {localStorage.clear(); navigate('/');}} className="mt-auto flex items-center gap-2 text-red-500 font-bold hover:bg-red-50 w-full p-3 rounded-xl transition-colors justify-center">
+            <LogOut size={18} /> Sign Out
+          </button>
         </div>
 
         {/* --- RIGHT CONTENT AREA --- */}
@@ -169,7 +207,7 @@ export default function Profile() {
               </div>
             )}
 
-            {/* 3. REQUESTS */}
+            {/* 3. REQUESTS (WITH FIXED CONNECTION LOGIC) */}
             {activeTab === 'mentorship' && (
               <div className="animate-fade-in-up">
                 {requests.length > 0 ? (
@@ -183,8 +221,8 @@ export default function Profile() {
                         <div className="flex items-center gap-3">
                           {req.status === 'pending' ? (
                             <>
-                              <button onClick={() => handleResponse(req._id, 'accepted')} className="bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-green-600 transition-colors flex items-center gap-2"><Check size={14} /> Accept</button>
-                              <button onClick={() => handleResponse(req._id, 'rejected')} className="border border-slate-200 text-slate-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-500 transition-colors flex items-center gap-2"><X size={14} /> Decline</button>
+                              <button onClick={() => handleAcceptRequest(req)} className="bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-green-600 transition-colors flex items-center gap-2"><Check size={14} /> Accept</button>
+                              <button onClick={() => handleRejectRequest(req._id)} className="border border-slate-200 text-slate-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-500 transition-colors flex items-center gap-2"><X size={14} /> Decline</button>
                             </>
                           ) : (
                             <span className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${req.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
@@ -197,7 +235,7 @@ export default function Profile() {
               </div>
             )}
 
-            {/* 4. MY ACTIVITY (NEW) */}
+            {/* 4. MY ACTIVITY (POSTS) */}
             {activeTab === 'activity' && (
               <div className="animate-fade-in-up space-y-6">
                 {myPosts.length > 0 ? myPosts.map((post) => (
@@ -227,15 +265,15 @@ export default function Profile() {
                     {/* COMMENTS */}
                     {expandedPosts[post._id] && (
                       <div className="mt-4 pt-4 border-t border-slate-200 bg-slate-100/50 -mx-6 -mb-6 px-6 py-4">
-                         <h5 className="text-[10px] font-bold text-slate-400 uppercase mb-3">Comments</h5>
-                         <div className="space-y-3">
-                           {post.comments.length > 0 ? post.comments.map((c, i) => (
-                             <div key={i} className="flex gap-2 text-xs">
-                               <span className="font-bold text-slate-900">{c.author}:</span>
-                               <span className="text-slate-600">{c.text}</span>
-                             </div>
-                           )) : <p className="text-xs text-slate-400 italic">No comments.</p>}
-                         </div>
+                          <h5 className="text-[10px] font-bold text-slate-400 uppercase mb-3">Comments</h5>
+                          <div className="space-y-3">
+                            {post.comments.length > 0 ? post.comments.map((c, i) => (
+                              <div key={i} className="flex gap-2 text-xs">
+                                <span className="font-bold text-slate-900">{c.author}:</span>
+                                <span className="text-slate-600">{c.text}</span>
+                              </div>
+                            )) : <p className="text-xs text-slate-400 italic">No comments.</p>}
+                          </div>
                       </div>
                     )}
                   </div>
