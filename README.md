@@ -20,3 +20,5 @@ Create a centralized digital platform that strengthens engagement, communication
 collaboration between alumni and the institution.
 Demonstrate originality and forward-thinking through inventive ideas and creative
 solutions
+
+

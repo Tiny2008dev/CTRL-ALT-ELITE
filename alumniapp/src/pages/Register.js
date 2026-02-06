@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
 
 function Register() {
@@ -7,7 +8,6 @@ function Register() {
     <div className="auth-container">
       <h2>Register</h2>
 
-      {/* Role Selection */}
       <select onChange={(e) => setRole(e.target.value)}>
         <option value="alumni">Alumni</option>
         <option value="student">Student</option>
@@ -16,21 +16,22 @@ function Register() {
       <input type="text" placeholder="Full Name" />
       <input type="email" placeholder="Email" />
       <input type="password" placeholder="Password" />
-
-      <input type="text" placeholder="College Name" />
+      <input type="text" placeholder="College" />
       <input type="text" placeholder="Department" />
 
-      {/* Alumni-specific */}
       {role === "alumni" && (
         <input type="number" placeholder="Passing Year" />
       )}
 
-      {/* Student-specific */}
       {role === "student" && (
         <input type="number" placeholder="Current Year" />
       )}
 
       <button className="primary-btn">Register</button>
+
+      <p className="link-text">
+        Already have an account? <Link to="/">Login</Link>
+      </p>
     </div>
   );
 }
