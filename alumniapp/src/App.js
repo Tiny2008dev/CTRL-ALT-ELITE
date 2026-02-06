@@ -1,7 +1,11 @@
+import Login from "./pages/loginogin";
+// import Register from "./pages/Register";
+
 function App() {
   return (
     <div>
-      <h1>Hello World 🚀</h1>
+      <Login />
+      {/* Switch to <Register /> when needed */}
     </div>
   );
 }
