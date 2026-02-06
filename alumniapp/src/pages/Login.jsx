@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Lock, Eye, EyeOff, Linkedin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,42 +7,56 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ username: '', password: '' });
 
+  // --- CRITICAL FIX 1: CLEAR STORAGE ON LOAD ---
+  // This ensures no data from a previous user lingers (fixes the profile pic bug)
+  useEffect(() => {
+    localStorage.clear(); 
+  }, []);
+
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Inside src/pages/Login.jsx
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await fetch('http://localhost:5000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      localStorage.setItem('userToken', data.token);
-      localStorage.setItem('userRole', data.userType);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
       
-      // SAVE USERNAME HERE
-      localStorage.setItem('userName', data.username); 
+      const data = await response.json();
       
-      navigate('/dashboard');
-    } else {
-      alert(data.message || "Invalid Credentials");
+      if (response.ok) {
+        // --- CRITICAL FIX 2: SAVE ALL USER DATA ---
+        localStorage.setItem('userToken', data.token);
+        localStorage.setItem('userRole', data.userType);
+        localStorage.setItem('userName', data.username);
+        
+        // Save Profile Data (Needed for Navbar & Profile Page)
+        localStorage.setItem('userPic', data.profilePic || ''); 
+        localStorage.setItem('userCollege', data.collegeName || 'Borcelle University');
+        localStorage.setItem('userDept', data.department || '');
+        
+        // Save Job Role (Needed for Mentorship Page)
+        localStorage.setItem('userJobRole', data.currentJobRole || 'Alumni'); 
+        
+        // Small delay to ensure storage is ready before switching pages
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        alert(data.message || "Invalid Credentials");
+      }
+    } catch (error) {
+      alert("Backend error. Is the server running?");
     }
-  } catch (error) {
-    alert("Backend error. Is the server running?");
-  }
-};
+  };
 
   return (
     // Flex container centered. overflow-y-auto handles small screens if card gets too tall.
     <div className="min-h-screen w-full flex items-center justify-center p-4">
       
-      {/* CARD: Increased max-width to 600px and padding to p-16 for that "premium" feel */}
+      {/* CARD: Premium Design */}
       <div className="bg-white w-full max-w-[600px] p-12 md:p-16 shadow-2xl rounded-[2.5rem] transform transition-all duration-500 hover:scale-[1.01] hover:shadow-teal-500/10 animate-fade-in-up">
         
         <div className="text-center mb-10">
@@ -52,7 +66,6 @@ const handleSubmit = async (e) => {
           <p className="text-slate-500 text-lg">Enter your details to access your account</p>
         </div>
 
-        {/* Form Spacing increased to space-y-8 */}
         <form onSubmit={handleSubmit} className="space-y-8">
           
           {/* USERNAME INPUT */}

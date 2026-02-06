@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, FileText, BarChart2, Users, Calendar, Lightbulb, Heart, Plus } from 'lucide-react';
+import { User, FileText, BarChart2, Users, Calendar, Lightbulb, Heart, Plus, Trophy } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole') || 'Alumni';
+  const userName = localStorage.getItem('userName') || 'User';
 
   const handleLogout = () => {
     localStorage.clear();
@@ -19,15 +20,17 @@ export default function Dashboard() {
         <div className="flex justify-between items-end mb-6 shrink-0 px-2">
           <div>
             <h1 className="text-6xl font-bold tracking-tight leading-none">Alumni<br />Connect</h1>
-            <p className="text-teal-400 text-lg tracking-widest uppercase font-bold mt-2 ml-1 opacity-90">Welcome back, {userRole}</p>
+            <p className="text-teal-400 text-lg tracking-widest uppercase font-bold mt-2 ml-1 opacity-90">
+              Welcome back, {userName}
+            </p>
           </div>
           <button onClick={handleLogout} className="text-sm font-bold text-gray-400 hover:text-white transition-all border-b-2 border-transparent hover:border-white pb-1">LOG OUT</button>
         </div>
 
         {/* GRID */}
-        <div className="flex-grow grid grid-cols-4 grid-rows-2 gap-6">
+        <div className="flex-grow grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-6">
           
-          {/* 1. ACCOUNTS CARD -> LINKS TO PROFILE PAGE */}
+          {/* 1. MY PROFILE (Big Card) */}
           <div 
             onClick={() => navigate('/profile')} 
             className="col-span-1 row-span-2 bg-gradient-to-b from-gray-200 to-gray-400 rounded-[2.5rem] p-8 flex flex-col justify-between relative group cursor-pointer hover:shadow-[0_0_50px_-10px_rgba(45,212,191,0.4)] transition-all duration-300"
@@ -41,38 +44,50 @@ export default function Dashboard() {
                  <div className="absolute top-[-10px] right-[-10px] w-12 h-12 bg-teal-300 rounded-full mix-blend-multiply opacity-60"></div>
                </div>
              </div>
-             <h3 className="text-4xl font-bold text-slate-900 text-center mb-4 tracking-tight">Accounts</h3>
+             <h3 className="text-4xl font-bold text-slate-900 text-center mb-4 tracking-tight">My Profile</h3>
           </div>
 
-          {/* 2. EMPLOYEE HANDBOOK */}
-          <DashboardCard title="Employee Handbook" icon={<FileText size={42} strokeWidth={1.2} />} />
-
-          {/* 3. POSTS -> LINKS TO FEED */}
+          {/* 2. LEADERBOARD (Updated Link & Icon) */}
           <DashboardCard 
-            title="Posts and comments" 
+            title="Leaderboard" 
+            icon={<Trophy size={42} strokeWidth={1.2} />} 
+            onClick={() => navigate('/leaderboard')} 
+          />
+
+          {/* 3. COMMUNITY FEED */}
+          <DashboardCard 
+            title="Community Feed" 
             icon={<BarChart2 size={42} strokeWidth={1.2} />} 
             onClick={() => navigate('/posts')} 
           />
 
-          {/* 4. HIRING */}
-          <DashboardCard title="Hiring" icon={<Users size={42} strokeWidth={1.2} />} />
-
-          {/* 5. EVENTS -> LINKS TO EVENTS */}
+          {/* 4. ALUMNI DIRECTORY (Updated Link) */}
           <DashboardCard 
-            title="New upcoming events" 
+            title="Directory" 
+            icon={<Users size={42} strokeWidth={1.2} />} 
+            onClick={() => navigate('/accounts')} 
+          />
+
+          {/* 5. EVENTS */}
+          <DashboardCard 
+            title="Events" 
             icon={<Calendar size={42} strokeWidth={1.2} />} 
             onClick={() => navigate('/events')} 
           />
 
           {/* 6. MENTORSHIP */}
-          <DashboardCard title="Mentorship" icon={<Lightbulb size={42} strokeWidth={1.2} />} />
+          <DashboardCard 
+            title="Mentorship" 
+            icon={<Lightbulb size={42} strokeWidth={1.2} />} 
+            onClick={() => navigate('/mentorship')} 
+          />
 
-          {/* 7. DONATIONS -> LINKS TO DONATIONS */}
+          {/* 7. DONATIONS */}
           <DashboardCard 
             title="Donations" 
             icon={<Heart size={42} strokeWidth={1.2} />} 
             isPurple={true} 
-            onClick={() => navigate('/donations')} // <--- ADDED THIS LINK
+            onClick={() => navigate('/donations')} 
           />
         </div>
       </div>
