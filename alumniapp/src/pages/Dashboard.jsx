@@ -1,18 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, FileText, BarChart2, Users, Calendar, Lightbulb, Heart, Plus, Trophy, MessageCircle } from 'lucide-react';
+import { User, BarChart2, Calendar, Lightbulb, Heart, Plus, Trophy, MessageCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState({ name: 'User', role: 'Student' });
 
   useEffect(() => {
-    // Get user info from local storage (set during login)
+    // 1. Check if user is logged in
+    const token = localStorage.getItem('userToken');
+    const role = localStorage.getItem('userRole');
+
+    if (!token) {
+      navigate('/'); // Redirect to login if no token
+    } else if (role === 'Admin') {
+      navigate('/admin'); // Redirect Admin to Admin Panel if they somehow got here
+    }
+
+    // 2. Set user info
     setUser({
       name: localStorage.getItem('userName') || 'User',
-      role: localStorage.getItem('userRole') || 'Student'
+      role: role || 'Student'
     });
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -68,7 +78,7 @@ export default function Dashboard() {
             onClick={() => navigate('/posts')} 
           />
 
-          {/* 4. CHAT & DIRECTORY (Updated Title & Icon) */}
+          {/* 4. CHAT & DIRECTORY */}
           <DashboardCard 
             title="Chat & Directory" 
             icon={<MessageCircle size={42} strokeWidth={1.2} />} 

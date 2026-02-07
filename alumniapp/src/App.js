@@ -6,17 +6,19 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer'; 
 
 // --- PAGES ---
-import Login from './pages/login';
+import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Dashboard';       // User Dashboard
+import AdminDashboard from './pages/AdminDashboard'; // <--- NEW ADMIN DASHBOARD
 import Events from './pages/Events';
 import Feed from './pages/Feed';         
-import Accounts from './pages/Accounts'; // This is your new "Chat & Directory" page
+import Accounts from './pages/Accounts';         // Chat & Directory
 import Profile from './pages/Profile';   
 import Donations from './pages/Donations'; 
 import Mentorship from './pages/Mentorship'; 
 import PublicProfile from './pages/PublicProfile'; 
 import Leaderboard from './pages/Leaderboard'; 
+import GoogleSuccess from './pages/GoogleSuccess';
 
 export default function App() {
   return (
@@ -32,6 +34,7 @@ export default function App() {
         {/* --- MAIN CONTENT WRAPPER --- */}
         <div className="relative z-10 flex flex-col flex-grow">
           
+          {/* You might want to hide Navbar for Admin pages, but for now we keep it simple */}
           <Navbar /> 
 
           <main className="flex-grow">
@@ -40,22 +43,24 @@ export default function App() {
               <Route path="/" element={<Login />} />
               <Route path="/register" element={<Register />} />
               
-              {/* DASHBOARD */}
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* DASHBOARDS */}
+              <Route path="/dashboard" element={<Dashboard />} />       {/* Student/Alumni */}
+              <Route path="/admin" element={<AdminDashboard />} />      {/* <--- NEW ADMIN ROUTE */}
               
               {/* CORE FEATURES */}
-              <Route path="/posts" element={<Feed />} />       {/* Community Feed */}
-              <Route path="/accounts" element={<Accounts />} /> {/* Chat & Directory */}
+              <Route path="/posts" element={<Feed />} />       
+              <Route path="/accounts" element={<Accounts />} /> 
               <Route path="/events" element={<Events />} />
               <Route path="/mentorship" element={<Mentorship />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/donations" element={<Donations />} />
+              <Route path="/google-success" element={<GoogleSuccess />} />
 
               {/* PROFILE ROUTES */}
-              <Route path="/profile" element={<Profile />} />          {/* My Settings */}
-              <Route path="/user/:username" element={<PublicProfile />} /> {/* View Others */}
+              <Route path="/profile" element={<Profile />} />          
+              <Route path="/user/:username" element={<PublicProfile />} /> 
               
-              {/* FALLBACK (Redirect unknown links to login) */}
+              {/* FALLBACK */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>
