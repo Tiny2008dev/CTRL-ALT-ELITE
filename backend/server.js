@@ -12,30 +12,33 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
-// --- DATABASE CONNECTION (LOCAL COMPASS) ---
-mongoose.connect('mongodb://127.0.0.1:27017/alumniDB')
-  .then(async () => {
-    console.log("✅ Local MongoDB Connected (Compass)");
+// --- DATABASE CONNECTION (MONGODB ATLAS) ---
+const connectDB = async () => {
+  try {
+    // FIX: Removed deprecated options (useNewUrlParser, useUnifiedTopology)
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
+    console.log("✅ MongoDB Atlas Connected");
     
     // --- AUTO-CREATE ADMIN USER ---
-    const adminExists = await User.findOne({ username: 'admin' });
-    if (!adminExists) {
-      await new User({
-        username: 'admin',
-        password: 'admin123', // Default Password
-        userType: 'Admin',
-        fullName: 'System Administrator',
-        email: 'admin@alumniconnect.com',
-        profilePic: '',
-        currentJobRole: 'Administrator'
-      }).save();
-      console.log("👑 Admin Account Created -> Username: admin | Password: admin123");
-    }
-  })
-  .catch(err => console.error("❌ Mongo Connection Error:", err));
+    // Note: We need to define the User model before using it here, 
+    // but since JavaScript hoists functions, we should be careful.
+    // However, to be safe, I have moved the Model definitions ABOVE this function
+    // in the logic flow, or we ensure the models are defined before this runs.
+    // In this specific file structure, Mongoose registers models globally, 
+    // so we just need to ensure 'User' is defined. 
+    // *See logic change below in the full file structure*
 
+  } catch (err) {
+    console.error("❌ Mongo Connection Error:", err.message);
+    console.error("Full error:", err);
+    process.exit(1); // Exit process with failure
+  }
+};
 
-// --- SCHEMAS (UPDATED WITH TIMESTAMPS FOR ANALYTICS) ---
+// --- SCHEMAS (Defined BEFORE connecting to ensure availability) ---
 
 // 1. USER SCHEMA
 const UserSchema = new mongoose.Schema({
@@ -55,7 +58,7 @@ const UserSchema = new mongoose.Schema({
   connections: [{ type: String }],       
   sentRequests: [{ type: String }],      
   receivedRequests: [{ type: String }]   
-}, { timestamps: true }); // <--- Added Timestamps
+}, { timestamps: true });
 const User = mongoose.model('User', UserSchema);
 
 // 2. POST SCHEMA
@@ -68,7 +71,7 @@ const PostSchema = new mongoose.Schema({
   timestamp: String, 
   likes: { type: Number, default: 0 },
   comments: [{ author: String, text: String, timestamp: String }] 
-}, { timestamps: true }); // <--- Added Timestamps
+}, { timestamps: true });
 const Post = mongoose.model('Post', PostSchema);
 
 // 3. EVENT SCHEMA
@@ -106,6 +109,34 @@ const MessageSchema = new mongoose.Schema({
 const Message = mongoose.model('Message', MessageSchema);
 
 
+// --- EXECUTE CONNECTION (Now that models are defined) ---
+// I moved the Admin creation logic inside here to ensure 'User' model exists
+const runConnection = async () => {
+    await connectDB();
+    
+    // Check for Admin after connection
+    try {
+        const adminExists = await User.findOne({ username: 'admin' });
+        if (!adminExists) {
+            await new User({
+                username: 'admin',
+                password: 'admin123',
+                userType: 'Admin',
+                fullName: 'System Administrator',
+                email: 'admin@alumniconnect.com',
+                profilePic: '',
+                currentJobRole: 'Administrator'
+            }).save();
+            console.log("👑 Admin Account Created");
+        }
+    } catch (e) {
+        console.log("⚠️ Admin check failed (DB might not be ready yet):", e.message);
+    }
+};
+
+runConnection();
+
+
 // --- ROUTES ---
 
 // AUTH & USER
@@ -123,7 +154,7 @@ app.post('/api/login', async (req, res) => {
     if (user) {
       res.json({ 
         token: 'mock', 
-        userType: user.userType, // This will be 'Admin' if admin logs in
+        userType: user.userType, 
         username: user.username, 
         profilePic: user.profilePic, 
         collegeName: user.collegeName, 
@@ -136,10 +167,9 @@ app.post('/api/login', async (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- GOOGLE OAUTH CONFIG & ROUTE ---
-const GOOGLE_CLIENT_ID = '852267957215-2e9l35kb9hfk7rvsio8gf34ehl94vt7k.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
-const GOOGLE_REDIRECT_URI = 'http://localhost:5000/api/auth/google/callback';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 app.get('/api/auth/google/callback', async (req, res) => {
   const { code } = req.query;
@@ -340,4 +370,5 @@ app.get('/api/opportunities', async (req, res) => { try { res.json(await Opportu
 app.post('/api/opportunities', async (req, res) => { try { await new Opportunity(req.body).save(); res.json({message: "Posted!"}); } catch(e) { res.status(500).json({error: e.message}); } });
 app.post('/api/seed-posts', async (req, res) => { await Post.deleteMany({}); await Post.insertMany([{ author: "Alex Johnson", role: "Alumni", content: "Excited to share my research!", timestamp: "2h ago", likes: 12, comments: [] }]); res.json({ message: "Seeded" }); });
 
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
