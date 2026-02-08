@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, FileText, Calendar, Briefcase, Trash2, LogOut, ShieldAlert, Activity } from 'lucide-react';
+import { Users, FileText, Calendar, Briefcase, Trash2, LogOut, ShieldAlert, Activity, PieChart as PieIcon, BarChart as BarIcon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ users: 0, posts: 0, events: 0, opportunities: 0 });
+  const [stats, setStats] = useState({ users: 0, posts: 0, events: 0, opportunities: 0, userDistribution: [], contentData: [] });
   const [usersList, setUsersList] = useState([]);
   const [postsList, setPostsList] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Security Check: If not admin, kick out
     const role = localStorage.getItem('userRole');
-    if (role !== 'Admin') {
-      navigate('/');
-    }
+    if (role !== 'Admin') navigate('/');
     fetchStats();
     fetchAllUsers();
     fetchPosts();
@@ -24,38 +22,41 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('http://localhost:5000/api/admin/stats');
       const data = await res.json();
-      setStats(data);
+      
+      // Process Data for Pie Chart
+      const pieData = data.userDistribution.map(item => ({
+        name: item._id || 'Unknown',
+        value: item.count
+      }));
+
+      setStats({ ...data, userDistribution: pieData });
     } catch (err) { console.error(err); }
   };
 
   const fetchAllUsers = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/users/all');
-      const data = await res.json();
-      setUsersList(data);
+      setUsersList(await res.json());
     } catch (err) { console.error(err); }
   };
 
   const fetchPosts = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/posts');
-      const data = await res.json();
-      setPostsList(data);
+      setPostsList(await res.json());
     } catch (err) { console.error(err); }
   };
 
   const deleteUser = async (id) => {
-    if(!window.confirm("Are you sure? This deletes the user permanently.")) return;
+    if(!window.confirm("Delete this user?")) return;
     await fetch(`http://localhost:5000/api/admin/user/${id}`, { method: 'DELETE' });
-    fetchAllUsers(); // Refresh list
-    fetchStats();
+    fetchAllUsers(); fetchStats();
   };
 
   const deletePost = async (id) => {
-    if(!window.confirm("Delete this post?")) return;
+    if(!window.confirm("Delete post?")) return;
     await fetch(`http://localhost:5000/api/admin/post/${id}`, { method: 'DELETE' });
-    fetchPosts(); // Refresh list
-    fetchStats();
+    fetchPosts(); fetchStats();
   };
 
   const handleLogout = () => {
@@ -63,17 +64,20 @@ export default function AdminDashboard() {
     navigate('/');
   };
 
+  // CHART COLORS
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans text-slate-800">
       
       {/* SIDEBAR */}
-      <div className="w-64 bg-slate-900 text-white p-6 flex flex-col fixed h-full z-10">
-        <h1 className="text-2xl font-bold mb-10 flex items-center gap-2">
-            <ShieldAlert className="text-teal-400" /> Admin Panel
+      <div className="w-64 bg-[#031130] text-white p-6 flex flex-col fixed h-full z-10 shadow-xl">
+        <h1 className="text-2xl font-bold mb-10 flex items-center gap-2 text-teal-400">
+            <ShieldAlert /> Admin Panel
         </h1>
         
         <nav className="space-y-2 flex-1">
-            <SidebarBtn label="Overview" icon={<Activity size={20} />} active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+            <SidebarBtn label="Analytics" icon={<Activity size={20} />} active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
             <SidebarBtn label="Manage Users" icon={<Users size={20} />} active={activeTab === 'users'} onClick={() => setActiveTab('users')} />
             <SidebarBtn label="Manage Posts" icon={<FileText size={20} />} active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
         </nav>
@@ -84,22 +88,69 @@ export default function AdminDashboard() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 ml-64 p-8">
+      <div className="flex-1 ml-64 p-8 overflow-y-auto">
         
-        {/* OVERVIEW TAB */}
+        {/* === OVERVIEW / ANALYTICS TAB === */}
         {activeTab === 'overview' && (
-            <div className="animate-fade-in">
-                <h2 className="text-3xl font-bold text-slate-800 mb-6">Dashboard Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="animate-fade-in space-y-8">
+                <h2 className="text-3xl font-bold text-slate-800">Platform Analytics</h2>
+                
+                {/* 1. Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <StatCard label="Total Users" value={stats.users} icon={<Users />} color="bg-blue-500" />
                     <StatCard label="Total Posts" value={stats.posts} icon={<FileText />} color="bg-teal-500" />
                     <StatCard label="Events" value={stats.events} icon={<Calendar />} color="bg-purple-500" />
                     <StatCard label="Opportunities" value={stats.opportunities} icon={<Briefcase />} color="bg-orange-500" />
                 </div>
+
+                {/* 2. Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    {/* Content Distribution (Bar Chart) */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-[400px]">
+                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-700">
+                            <BarIcon className="text-teal-500" size={20}/> Content Distribution
+                        </h3>
+                        <ResponsiveContainer width="100%" height="85%">
+                            <BarChart data={stats.contentData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" tick={{fill: '#64748b'}} axisLine={false} tickLine={false} />
+                                <YAxis tick={{fill: '#64748b'}} axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={50} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* User Demographics (Pie Chart) */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-[400px]">
+                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-700">
+                            <PieIcon className="text-purple-500" size={20}/> User Demographics
+                        </h3>
+                        <ResponsiveContainer width="100%" height="85%">
+                            <PieChart>
+                                <Pie 
+                                    data={stats.userDistribution} 
+                                    cx="50%" cy="50%" 
+                                    innerRadius={80} 
+                                    outerRadius={120} 
+                                    paddingAngle={5} 
+                                    dataKey="value"
+                                >
+                                    {stats.userDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
         )}
 
-        {/* USERS TAB */}
+        {/* === USERS TAB === */}
         {activeTab === 'users' && (
             <div className="animate-fade-in">
                 <h2 className="text-3xl font-bold text-slate-800 mb-6">User Management</h2>
@@ -115,10 +166,10 @@ export default function AdminDashboard() {
                         </thead>
                         <tbody>
                             {usersList.map(u => (
-                                <tr key={u._id} className="border-b hover:bg-slate-50">
+                                <tr key={u._id} className="border-b hover:bg-slate-50 transition-colors">
                                     <td className="p-4 font-bold flex items-center gap-3">
                                         <div className="w-8 h-8 bg-slate-200 rounded-full overflow-hidden">
-                                            {u.profilePic ? <img src={u.profilePic} className="w-full h-full object-cover" alt="u"/> : null}
+                                            {u.profilePic && <img src={u.profilePic} className="w-full h-full object-cover" alt="u"/>}
                                         </div>
                                         {u.username}
                                     </td>
@@ -137,25 +188,24 @@ export default function AdminDashboard() {
             </div>
         )}
 
-        {/* POSTS TAB */}
+        {/* === POSTS TAB === */}
         {activeTab === 'posts' && (
             <div className="animate-fade-in">
                 <h2 className="text-3xl font-bold text-slate-800 mb-6">Post Management</h2>
                 <div className="grid grid-cols-1 gap-4">
                     {postsList.map(post => (
-                        <div key={post._id} className="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start">
+                        <div key={post._id} className="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start border border-slate-100">
                             <div>
                                 <h4 className="font-bold text-lg">{post.author}</h4>
                                 <p className="text-slate-600 mt-1">{post.content}</p>
                                 <span className="text-xs text-slate-400 mt-2 block">{post.timestamp}</span>
                             </div>
-                            <button onClick={() => deletePost(post._id)} className="text-red-500 hover:text-red-700 flex items-center gap-1 font-bold"><Trash2 size={16}/> Delete</button>
+                            <button onClick={() => deletePost(post._id)} className="text-red-500 hover:text-red-700 flex items-center gap-1 font-bold hover:bg-red-50 px-3 py-1 rounded transition"><Trash2 size={16}/> Delete</button>
                         </div>
                     ))}
                 </div>
             </div>
         )}
-
       </div>
     </div>
   );
@@ -172,12 +222,12 @@ function SidebarBtn({ label, icon, active, onClick }) {
 
 function StatCard({ label, value, icon, color }) {
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4 border border-slate-100">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${color}`}>
                 {icon}
             </div>
             <div>
-                <p className="text-slate-500 text-sm font-bold uppercase">{label}</p>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">{label}</p>
                 <h3 className="text-3xl font-black text-slate-800">{value}</h3>
             </div>
         </div>

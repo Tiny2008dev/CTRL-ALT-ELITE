@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, MessageSquare, Calendar, Users, Heart, User, LogOut, Search } from 'lucide-react';
+import { Home, MessageSquare, Calendar, Users, Heart, User, LogOut, Search, Bell } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -8,9 +8,9 @@ export default function Navbar() {
   
   // STATE
   const [userInfo, setUserInfo] = useState({ name: '', role: '', pic: '' });
-  const [searchQuery, setSearchQuery] = useState(''); // <--- NEW SEARCH STATE
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // RE-FETCH DATA
+  // RE-FETCH DATA ON NAVIGATION
   useEffect(() => {
     setUserInfo({
       name: localStorage.getItem('userName') || 'User',
@@ -19,41 +19,50 @@ export default function Navbar() {
     });
   }, [location]);
 
-  if (location.pathname === '/' || location.pathname === '/register') return null;
+  // HIDE NAVBAR ON: Login, Register, and ADMIN Pages
+  if (['/', '/register', '/admin'].includes(location.pathname)) return null;
 
-  const isActive = (path) => location.pathname === path ? 'text-teal-400 bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5';
+  const isActive = (path) => location.pathname === path 
+    ? 'text-white bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.5)]' 
+    : 'text-slate-400 hover:text-white hover:bg-white/10';
 
-  const handleLogout = () => { localStorage.clear(); navigate('/'); };
+  const handleLogout = () => { 
+    localStorage.clear(); 
+    navigate('/'); 
+  };
 
-  // --- NEW: HANDLE SEARCH ---
+  // --- HANDLE SEARCH ---
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
+      // Navigate to Accounts page with search param
       navigate(`/accounts?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery(''); // Clear input after search
+      setSearchQuery(''); // Clear input
     }
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#031130]/80 backdrop-blur-md border-b border-white/10 h-20">
-      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#031130]/90 backdrop-blur-xl border-b border-white/10 h-20 transition-all duration-300">
+      <div className="max-w-[1600px] mx-auto px-6 h-full flex items-center justify-between gap-4">
         
-        {/* LOGO */}
-        <Link to="/dashboard" className="flex items-center gap-2 group shrink-0">
-          <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-xl flex items-center justify-center text-black font-bold text-xl group-hover:scale-110 transition-transform">AC</div>
-          <div className="leading-none hidden sm:block">
-            <h1 className="text-white font-bold text-lg tracking-tight">Alumni</h1>
-            <span className="text-teal-400 text-xs font-bold uppercase tracking-widest">Connect</span>
+        {/* 1. LOGO */}
+        <Link to="/dashboard" className="flex items-center gap-3 group shrink-0">
+          <div className="w-10 h-10 bg-gradient-to-tr from-teal-400 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-105 transition-transform">
+            AC
+          </div>
+          <div className="leading-tight hidden sm:block">
+            <h1 className="text-white font-bold text-lg tracking-tight group-hover:text-teal-400 transition-colors">AlumniConnect</h1>
+            <p className="text-xs text-slate-400 font-bold tracking-widest uppercase">Community</p>
           </div>
         </Link>
 
-        {/* --- NEW SEARCH BAR --- */}
-        <div className="hidden md:block flex-grow max-w-md mx-4">
+        {/* 2. SEARCH BAR (Hidden on mobile) */}
+        <div className="hidden md:block flex-grow max-w-lg mx-8">
           <div className="relative group">
-            <Search className="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-teal-400 transition-colors" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-400 transition-colors" size={18} />
             <input 
               type="text" 
               placeholder="Search alumni, students, or roles..." 
-              className="w-full bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:bg-white/10 transition-all"
+              className="w-full bg-[#0f1d3e] border border-white/10 rounded-full pl-12 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:bg-[#1a2b55] transition-all shadow-inner"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
@@ -61,30 +70,44 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* NAVIGATION LINKS (Compact) */}
-        <div className="hidden lg:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/5 shrink-0">
+        {/* 3. NAVIGATION LINKS */}
+        <div className="hidden lg:flex items-center gap-2 bg-[#0f1d3e] p-1.5 rounded-full border border-white/5 shrink-0">
           <NavItem to="/dashboard" icon={<Home size={18} />} activeClass={isActive('/dashboard')} title="Home" />
           <NavItem to="/posts" icon={<MessageSquare size={18} />} activeClass={isActive('/posts')} title="Feed" />
           <NavItem to="/events" icon={<Calendar size={18} />} activeClass={isActive('/events')} title="Events" />
           <NavItem to="/accounts" icon={<Users size={18} />} activeClass={isActive('/accounts')} title="Directory" />
+          <NavItem to="/mentorship" icon={<Bell size={18} />} activeClass={isActive('/mentorship')} title="Mentorship" />
           <NavItem to="/donations" icon={<Heart size={18} />} activeClass={isActive('/donations')} title="Donate" />
         </div>
 
-        {/* PROFILE */}
-        <div className="flex items-center gap-4 shrink-0">
-          <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="text-right hidden sm:block">
-              <p className="text-white text-sm font-bold">{userInfo.name}</p>
-              <p className="text-gray-400 text-[10px] uppercase font-bold">{userInfo.role}</p>
+        {/* 4. PROFILE & LOGOUT */}
+        <div className="flex items-center gap-4 shrink-0 pl-4 border-l border-white/10 ml-2">
+          
+          <Link to="/profile" className="flex items-center gap-3 group">
+            <div className="text-right hidden xl:block">
+              <p className="text-white text-sm font-bold group-hover:text-teal-400 transition-colors">{userInfo.name}</p>
+              <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">{userInfo.role}</p>
             </div>
-            {userInfo.pic ? (
-              <img key={userInfo.pic} src={userInfo.pic} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-teal-400 bg-white" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border-2 border-teal-400"><User size={20} className="text-white" /></div>
-            )}
+            
+            <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-teal-400 to-blue-600 group-hover:shadow-[0_0_10px_rgba(45,212,191,0.5)] transition-all">
+               <div className="w-full h-full rounded-full overflow-hidden bg-slate-900">
+                 {userInfo.pic ? (
+                   <img src={userInfo.pic} alt="Profile" className="w-full h-full object-cover" />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-white"><User size={18} /></div>
+                 )}
+               </div>
+            </div>
           </Link>
-          <div className="h-8 w-px bg-white/10 mx-1"></div>
-          <button onClick={handleLogout} className="text-gray-400 hover:text-red-400 transition-colors p-2"><LogOut size={20} /></button>
+
+          <button 
+            onClick={handleLogout} 
+            className="text-slate-400 hover:text-red-400 hover:bg-red-400/10 p-2.5 rounded-full transition-all"
+            title="Logout"
+          >
+            <LogOut size={20} />
+          </button>
+
         </div>
 
       </div>
@@ -92,9 +115,10 @@ export default function Navbar() {
   );
 }
 
+// Helper Component for Nav Items
 function NavItem({ to, icon, activeClass, title }) {
   return (
-    <Link to={to} className={`p-2.5 rounded-full transition-all ${activeClass}`} title={title}>
+    <Link to={to} className={`p-3 rounded-full transition-all duration-300 ${activeClass}`} title={title}>
       {icon}
     </Link>
   );

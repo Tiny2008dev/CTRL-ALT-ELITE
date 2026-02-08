@@ -6,7 +6,7 @@ export default function Accounts() {
   const [activeTab, setActiveTab] = useState('explore'); // 'explore' or 'chats'
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [myProfile, setMyProfile] = useState(null); // To store my connections/requests
+  const [myProfile, setMyProfile] = useState(null); 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate(); 
   
@@ -18,13 +18,14 @@ export default function Accounts() {
   // Booking State
   const [bookingUser, setBookingUser] = useState(null);
   const [bookingSlot, setBookingSlot] = useState('');
+  const [bookingNote, setBookingNote] = useState(''); // Added logic for this
 
   const currentUser = localStorage.getItem('userName') || 'User'; 
 
-  // --- INITIAL DATA FETCH ---
+  // --- INITIAL FETCH ---
   useEffect(() => {
-    fetchMyProfile(); // Fetch my own data to know connections
-    fetchUsers();     // Fetch all users
+    fetchMyProfile();
+    fetchUsers();
   }, []);
 
   // --- AUTO-SCROLL CHAT ---
@@ -69,7 +70,7 @@ export default function Accounts() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender: currentUser, recipient: targetUser })
       });
-      // Update local state to show "Pending" immediately
+      // Optimistic update
       setMyProfile(prev => ({
         ...prev,
         sentRequests: [...(prev.sentRequests || []), targetUser]
@@ -81,7 +82,7 @@ export default function Accounts() {
     if (!myProfile) return 'loading';
     if (myProfile.connections?.includes(user.username)) return 'connected';
     if (myProfile.sentRequests?.includes(user.username)) return 'pending';
-    if (myProfile.receivedRequests?.includes(user.username)) return 'received'; // They sent me a request
+    if (myProfile.receivedRequests?.includes(user.username)) return 'received'; 
     return 'connect';
   };
 
@@ -120,12 +121,14 @@ export default function Accounts() {
         body: JSON.stringify({
           mentorName: bookingUser.username,
           studentName: currentUser,
-          message: "I'd like to book a session.",
+          message: bookingNote || "I'd like to book a session.",
           slot: bookingSlot
         })
       });
       alert(`Request sent to ${bookingUser.username}!`);
       setBookingUser(null);
+      setBookingNote('');
+      setBookingSlot('');
     } catch (err) { alert("Booking failed"); }
   };
 
@@ -142,7 +145,6 @@ export default function Accounts() {
     ));
   };
 
-  // FILTER CHAT USERS (Only Show Connections)
   const connectedUsers = users.filter(u => myProfile?.connections?.includes(u.username));
 
   return (
@@ -192,7 +194,6 @@ export default function Accounts() {
                     {user.location && <p className="text-slate-500 text-xs flex items-center gap-2"><MapPin size={14} /> {user.location}</p>}
                   </div>
 
-                  {/* DYNAMIC BUTTONS BASED ON CONNECTION STATUS */}
                   <div className="flex gap-2 mt-auto">
                     {status === 'connected' ? (
                       <button onClick={() => startChat(user)} className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors">
@@ -203,7 +204,7 @@ export default function Accounts() {
                         <Clock size={16} /> Pending
                       </button>
                     ) : status === 'received' ? (
-                       <button onClick={() => navigate('/mentorship')} className="flex-1 bg-blue-500 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600">
+                       <button onClick={() => navigate('/profile')} className="flex-1 bg-blue-500 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600">
                         <Check size={16} /> Accept in Inbox
                       </button>
                     ) : (
@@ -221,11 +222,10 @@ export default function Accounts() {
         </div>
       )}
 
-      {/* ==================== 2. CHATS TAB (ONLY CONNECTED USERS) ==================== */}
+      {/* ==================== 2. CHATS TAB ==================== */}
       {activeTab === 'chats' && (
         <div className="w-full max-w-5xl h-[700px] bg-white rounded-[2rem] overflow-hidden flex shadow-2xl animate-fade-in-up border border-slate-200">
           
-          {/* SIDEBAR */}
           <div className="w-1/3 bg-slate-50 border-r border-slate-200 flex flex-col">
             <div className="p-6 border-b border-slate-200">
               <h2 className="text-xl font-bold text-slate-900">My Connections</h2>
@@ -251,7 +251,6 @@ export default function Accounts() {
             </div>
           </div>
 
-          {/* CHAT AREA */}
           <div className="w-2/3 bg-white flex flex-col relative">
             {activeChatUser ? (
               <>
@@ -265,6 +264,7 @@ export default function Accounts() {
                       <span className="text-xs text-green-500 flex items-center gap-1 font-bold">● Online</span>
                     </div>
                   </div>
+                  <button onClick={() => setBookingUser(activeChatUser)} className="bg-teal-50 text-teal-600 px-4 py-2 rounded-full text-xs font-bold hover:bg-teal-100 transition-colors flex items-center gap-2"><Video size={14} /> Schedule Meet</button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
@@ -303,16 +303,45 @@ export default function Accounts() {
         </div>
       )}
 
-      {/* BOOKING MODAL */}
+      {/* ==================== 3. BOOKING MODAL (FIXED) ==================== */}
       {bookingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-scale-up">
             <button onClick={() => setBookingUser(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={24} /></button>
+            
             <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-3 text-teal-600"><Calendar size={32} /></div>
               <h2 className="text-2xl font-bold text-slate-900">Book Session</h2>
+              <p className="text-slate-500 text-sm mt-1">Request a meeting with <span className="text-teal-600 font-bold">{bookingUser.fullName || bookingUser.username}</span></p>
             </div>
-            <input type="datetime-local" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4" onChange={(e) => setBookingSlot(e.target.value)} />
-            <button onClick={handleBookSlot} className="w-full bg-black text-white py-3 rounded-xl font-bold">Confirm</button>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Select Date & Time</label>
+                {/* FIX: Force light text scheme so calendar icon is visible, and text-black */}
+                <input 
+                  type="datetime-local" 
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold focus:ring-2 focus:ring-teal-500 outline-none mt-1" 
+                  onChange={(e) => setBookingSlot(e.target.value)} 
+                  style={{ colorScheme: 'light' }} 
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Note (Optional)</label>
+                <textarea 
+                  rows="2"
+                  placeholder="Topic of discussion..."
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl p-3 text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 outline-none mt-1 resize-none"
+                  onChange={(e) => setBookingNote(e.target.value)}
+                />
+              </div>
+
+              <button onClick={handleBookSlot} className="w-full bg-black text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                Send Request <Send size={16} />
+              </button>
+            </div>
+
           </div>
         </div>
       )}

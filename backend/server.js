@@ -35,7 +35,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/alumniDB')
   .catch(err => console.error("❌ Mongo Connection Error:", err));
 
 
-// --- SCHEMAS ---
+// --- SCHEMAS (UPDATED WITH TIMESTAMPS FOR ANALYTICS) ---
 
 // 1. USER SCHEMA
 const UserSchema = new mongoose.Schema({
@@ -55,7 +55,7 @@ const UserSchema = new mongoose.Schema({
   connections: [{ type: String }],       
   sentRequests: [{ type: String }],      
   receivedRequests: [{ type: String }]   
-});
+}, { timestamps: true }); // <--- Added Timestamps
 const User = mongoose.model('User', UserSchema);
 
 // 2. POST SCHEMA
@@ -68,19 +68,19 @@ const PostSchema = new mongoose.Schema({
   timestamp: String, 
   likes: { type: Number, default: 0 },
   comments: [{ author: String, text: String, timestamp: String }] 
-});
+}, { timestamps: true }); // <--- Added Timestamps
 const Post = mongoose.model('Post', PostSchema);
 
 // 3. EVENT SCHEMA
 const EventSchema = new mongoose.Schema({
   title: String, date: String, location: String, fee: String, category: String, description: String
-});
+}, { timestamps: true });
 const Event = mongoose.model('Event', EventSchema);
 
 // 4. OPPORTUNITY SCHEMA
 const OpportunitySchema = new mongoose.Schema({
   title: String, type: String, domain: String, location: String, duration: String, stipend: String, description: String, posterName: String, posterRole: String, posterPic: String, tags: [String], timestamp: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 const Opportunity = mongoose.model('Opportunity', OpportunitySchema);
 
 // 5. NOTIFICATION SCHEMA
@@ -184,7 +184,6 @@ app.get('/api/auth/google/callback', async (req, res) => {
     }
 
     // 4. Redirect to Frontend Success Page
-    // Make sure your frontend is running on localhost:3000
     const frontendURL = `http://localhost:3000/google-success?token=mock-google-token&username=${user.username}&role=${user.userType}&pic=${encodeURIComponent(user.profilePic)}`;
     
     res.redirect(frontendURL);
@@ -291,16 +290,29 @@ app.put('/api/notifications/:id/respond', async (req, res) => {
 });
 
 
-// --- 👑 ADMIN PANEL ROUTES ---
+// --- 👑 ADMIN PANEL ROUTES (UPDATED FOR ANALYTICS) ---
 
-// 1. Get Stats
+// 1. Get Stats (Added User/Content Distribution Logic)
 app.get('/api/admin/stats', async (req, res) => {
   try {
     const users = await User.countDocuments();
     const posts = await Post.countDocuments();
     const events = await Event.countDocuments();
     const opportunities = await Opportunity.countDocuments();
-    res.json({ users, posts, events, opportunities });
+
+    // 1. User Distribution (Student vs Alumni)
+    const userDistribution = await User.aggregate([
+      { $group: { _id: "$userType", count: { $sum: 1 } } }
+    ]);
+
+    // 2. Content Distribution (Posts vs Events vs Opportunities)
+    const contentData = [
+      { name: 'Posts', value: posts },
+      { name: 'Events', value: events },
+      { name: 'Jobs', value: opportunities }
+    ];
+
+    res.json({ users, posts, events, opportunities, userDistribution, contentData });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
