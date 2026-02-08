@@ -32,7 +32,7 @@ export default function Profile() {
   // 1. FETCH USER PROFILE
   const fetchUserData = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/user/${currentUserName}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUserName}`);
       const data = await res.json();
       if (data) {
         setUserData({
@@ -54,7 +54,7 @@ export default function Profile() {
   // 2. FETCH REQUESTS
   const fetchRequests = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/notifications/${currentUserName}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/notifications/${currentUserName}`);
       const data = await res.json();
       setRequests(data.notifications || []);
     } catch (err) { console.error("Error fetching requests"); }
@@ -63,7 +63,7 @@ export default function Profile() {
   // 3. FETCH MY POSTS
   const fetchMyPosts = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/user/${currentUserName}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/posts/user/${currentUserName}`);
       const data = await res.json();
       setMyPosts(data);
     } catch (err) { console.error("Error fetching my posts"); }
@@ -76,7 +76,7 @@ export default function Profile() {
     try {
       // A. Call Connection API if it's a connection request
       if (req.type === 'connection_request') {
-        await fetch('http://localhost:5000/api/connect/accept', {
+        await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/connect/accept', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -87,7 +87,7 @@ export default function Profile() {
       }
 
       // B. Update Notification Status
-      await fetch(`http://localhost:5000/api/notifications/${req._id}/respond`, {
+      await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/notifications/${req._id}/respond`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'accepted' })
@@ -102,7 +102,7 @@ export default function Profile() {
   // Handle Decline
   const handleRejectRequest = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/respond`, {
+      await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/notifications/${id}/respond`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'rejected' })
@@ -118,7 +118,7 @@ export default function Profile() {
   const handleChange = (e) => setUserData({ ...userData, [e.target.name]: e.target.value });
   
   const handleSave = async () => {
-    await fetch(`http://localhost:5000/api/user/${currentUserName}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData) });
+    await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUserName}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData) });
     localStorage.setItem('userJobRole', userData.currentJobRole);
     alert("Profile Saved!");
   };
@@ -128,7 +128,7 @@ export default function Profile() {
     const reader = new FileReader(); reader.readAsDataURL(file);
     reader.onloadend = async () => {
       setUserData({ ...userData, profilePic: reader.result });
-      await fetch(`http://localhost:5000/api/user/${currentUserName}/photo`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profilePic: reader.result }) });
+      await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUserName}/photo`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profilePic: reader.result }) });
       localStorage.setItem('userPic', reader.result);
     };
   };

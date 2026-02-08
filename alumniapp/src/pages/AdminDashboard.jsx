@@ -20,7 +20,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/stats');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/admin/stats');
       const data = await res.json();
       
       // Process Data for Pie Chart
@@ -35,27 +35,27 @@ export default function AdminDashboard() {
 
   const fetchAllUsers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/users/all');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/users/all');
       setUsersList(await res.json());
     } catch (err) { console.error(err); }
   };
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/posts');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/posts');
       setPostsList(await res.json());
     } catch (err) { console.error(err); }
   };
 
   const deleteUser = async (id) => {
     if(!window.confirm("Delete this user?")) return;
-    await fetch(`http://localhost:5000/api/admin/user/${id}`, { method: 'DELETE' });
+    await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/admin/user/${id}`, { method: 'DELETE' });
     fetchAllUsers(); fetchStats();
   };
 
   const deletePost = async (id) => {
     if(!window.confirm("Delete post?")) return;
-    await fetch(`http://localhost:5000/api/admin/post/${id}`, { method: 'DELETE' });
+    await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/admin/post/${id}`, { method: 'DELETE' });
     fetchPosts(); fetchStats();
   };
 

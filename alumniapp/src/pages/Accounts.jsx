@@ -46,7 +46,7 @@ export default function Accounts() {
 
   const fetchMyProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/user/${currentUser}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUser}`);
       const data = await res.json();
       setMyProfile(data);
     } catch (err) { console.error(err); }
@@ -54,7 +54,7 @@ export default function Accounts() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/users/all');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/users/all');
       const data = await res.json();
       const others = data.filter(u => u.username !== currentUser);
       setUsers(others);
@@ -65,7 +65,7 @@ export default function Accounts() {
   // --- CONNECTION LOGIC ---
   const handleConnect = async (targetUser) => {
     try {
-      await fetch('http://localhost:5000/api/connect/request', {
+      await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/connect/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender: currentUser, recipient: targetUser })
@@ -89,7 +89,7 @@ export default function Accounts() {
   // --- CHAT & BOOKING ---
   const fetchMessages = async (otherUser) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/messages/${currentUser}/${otherUser}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/messages/${currentUser}/${otherUser}`);
       const data = await res.json();
       setMessages(data);
     } catch (err) { console.error(err); }
@@ -98,7 +98,7 @@ export default function Accounts() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChatUser) return;
     try {
-      await fetch('http://localhost:5000/api/messages', {
+      await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,7 +115,7 @@ export default function Accounts() {
   const handleBookSlot = async () => {
     if (!bookingSlot) return alert("Please pick a time!");
     try {
-      await fetch('http://localhost:5000/api/meet/request', {
+      await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/meet/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

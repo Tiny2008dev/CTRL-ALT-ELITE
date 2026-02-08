@@ -13,7 +13,7 @@ export default function Leaderboard() {
 
   const fetchTopPosts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/posts/leaderboard');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/posts/leaderboard');
       const data = await res.json();
       setPosts(data);
     } catch (err) { console.error("Error fetching leaderboard"); }

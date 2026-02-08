@@ -16,11 +16,11 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await fetch(`http://localhost:5000/api/user/${username}`);
+        const userRes = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${username}`);
         if (userRes.ok) {
           const userData = await userRes.json();
           setUser(userData);
-          const postsRes = await fetch(`http://localhost:5000/api/posts/user/${username}`);
+          const postsRes = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/posts/user/${username}`);
           const postsData = await postsRes.json();
           setPosts(postsData);
         } else {

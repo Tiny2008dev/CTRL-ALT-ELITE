@@ -19,7 +19,7 @@ export default function Login() {
   const handleGoogleLogin = () => {
     // 1. Configuration (Taken from your screenshot)
     const googleClientId = '852267957215-2e9l35kb9hfk7rvsio8gf34ehl94vt7k.apps.googleusercontent.com';
-    const redirectUri = 'http://localhost:5000/api/auth/google/callback';
+    const redirectUri = 'https://ctrl-alt-elite-bcknd.onrender.com/api/auth/google/callback';
     const scope = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
     
     // 2. Redirect to Google
@@ -29,7 +29,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

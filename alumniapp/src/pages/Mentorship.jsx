@@ -34,7 +34,7 @@ export default function Mentorship() {
 
   const fetchOpportunities = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/opportunities');
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/opportunities');
       setOpportunities(await res.json());
     } catch (err) { console.error("Failed to fetch opportunities"); }
   };
@@ -44,7 +44,7 @@ export default function Mentorship() {
     if (!currentUser.name) return;
     try {
       // Ask backend: "How many requests for ME?"
-      const res = await fetch(`http://localhost:5000/api/notifications/${currentUser.name}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/notifications/${currentUser.name}`);
       const data = await res.json();
       setPendingCount(data.count || 0);
     } catch (err) { console.error("Failed to fetch notifications"); }
@@ -56,7 +56,7 @@ export default function Mentorship() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/mentorship/request', {
+      const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/mentorship/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,7 +80,7 @@ export default function Mentorship() {
     setIsSubmitting(true);
     try {
       const tagsArray = newOpp.tags.split(',').map(t => t.trim());
-      await fetch('http://localhost:5000/api/opportunities', {
+      await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/opportunities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

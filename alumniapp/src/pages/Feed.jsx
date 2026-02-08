@@ -35,7 +35,7 @@ export default function Feed() {
   // --- FETCHING ---
   const fetchUserData = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/user/${currentUser.name}`);
+      const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUser.name}`);
       const data = await res.json();
       if (data) {
         setCurrentUser(prev => ({ ...prev, pic: data.profilePic || '', college: data.collegeName || 'Add College', dept: data.department || 'Add Department' }));
@@ -43,9 +43,9 @@ export default function Feed() {
       }
     } catch (err) {}
   };
-  const fetchPosts = async () => { const res = await fetch('http://localhost:5000/api/posts'); setPosts(await res.json()); };
-  const fetchConnections = async () => { const res = await fetch('http://localhost:5000/api/users/suggested'); const data = await res.json(); setConnections(data.map(u => ({ ...u, status: 'Connect' }))); };
-  const fetchEvents = async () => { const res = await fetch('http://localhost:5000/api/events'); const data = await res.json(); setEvents(data.slice(0, 3)); };
+  const fetchPosts = async () => { const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/posts'); setPosts(await res.json()); };
+  const fetchConnections = async () => { const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/users/suggested'); const data = await res.json(); setConnections(data.map(u => ({ ...u, status: 'Connect' }))); };
+  const fetchEvents = async () => { const res = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/events'); const data = await res.json(); setEvents(data.slice(0, 3)); };
 
   // --- SOCIAL ACTIONS ---
   
@@ -53,7 +53,7 @@ export default function Feed() {
   const handleLike = async (postId) => {
     const updated = posts.map(p => p._id === postId ? { ...p, likes: p.likes + 1 } : p);
     setPosts(updated);
-    await fetch(`http://localhost:5000/api/posts/${postId}/like`, { method: 'PUT' });
+    await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/posts/${postId}/like`, { method: 'PUT' });
   };
 
   // 2. COMMENT
@@ -65,7 +65,7 @@ export default function Feed() {
   const submitComment = async (postId) => {
     if (!commentText.trim()) return;
     try {
-      await fetch(`http://localhost:5000/api/posts/${postId}/comment`, {
+      await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/posts/${postId}/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ author: currentUser.name, text: commentText })
@@ -84,7 +84,7 @@ export default function Feed() {
   // --- POST CREATION ---
   const handlePost = async () => {
     if (!newPostContent.trim() && !postImage) return;
-    await fetch('http://localhost:5000/api/posts', {
+    await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/posts', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author: currentUser.name, role: currentUser.role, content: newPostContent, image: postImage })
     });
@@ -98,14 +98,14 @@ export default function Feed() {
 
   // --- PROFILE ---
   const handleSaveProfile = async () => {
-    const res = await fetch(`http://localhost:5000/api/user/${currentUser.name}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editForm) });
+    const res = await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUser.name}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editForm) });
     if (res.ok) { setIsEditing(false); fetchUserData(); alert("Profile Updated!"); }
   };
   const handleProfilePicChange = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
     reader.onloadend = async () => {
-      await fetch(`http://localhost:5000/api/user/${currentUser.name}/photo`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profilePic: reader.result }) });
+      await fetch(`https://ctrl-alt-elite-bcknd.onrender.com/api/user/${currentUser.name}/photo`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profilePic: reader.result }) });
       setCurrentUser(prev => ({...prev, pic: reader.result})); localStorage.setItem('userPic', reader.result);
     };
   };

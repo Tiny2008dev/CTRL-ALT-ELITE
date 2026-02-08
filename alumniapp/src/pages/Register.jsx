@@ -18,7 +18,7 @@ export default function Register() {
     if (formData.password !== formData.confirmPassword) return alert("Passwords do not match!");
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch('https://ctrl-alt-elite-bcknd.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, userType }), 
